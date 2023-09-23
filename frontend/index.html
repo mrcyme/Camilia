@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="styles.css" />
+    <script src="https://unpkg.com/@highlightjs/cdn-assets@11.7.0/highlight.js"></script>
+    <title>Chat App</title>
+</head>
+<body>
+    <div id="chat-messages"></div>
+    
+    
+    
+    <!-- Wrap input and button in a flex container -->
+    <div id="message-input-container">
+        <button id="fileButton">+</button>
+        <input type="text" id="input-message" placeholder="Type your message...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+    <!-- Add this dropdown for selecting the bot type -->
+    <select id="bot-type">
+        <option value="gpt3.5">GPT-3.5</option>
+        <option value="gpt4">GPT-4</option>
+        <option value="gpt4">Claude 2</option>
+    </select>
+    
+    <script src="renderer.js"></script>
+</body>
+</html>

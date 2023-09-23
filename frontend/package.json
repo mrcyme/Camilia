@@ -1,0 +1,17 @@
+{
+  "name": "camiliafrontend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "renderer.js",
+  "scripts": {
+    "start": "electron main.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^26.2.1"
+  },
+  "dependencies": {
+    "highlight.js": "^11.8.0"
+  }
+}
