@@ -1,35 +1,6 @@
-import openai
-import json
 import re
-
-with open("./keys.json", 'r') as j:
-    keys = json.loads(j.read())
-    openai.api_key = keys["OPENAI_API_KEY"]
-
-class Model:
-    def __init__(self, model_name):
-        self.model_name = model_name
-    
-    def get_response(self, prompt):
-        raise NotImplementedError("Subclasses should implement this method.")
-
-
-class OpenAI(Model):
-    def __init__(self, model_name="gpt-3.5-turbo"):
-        super().__init__(model_name)
-    
-    def get_response(self, conversation):
-        response = openai.ChatCompletion.create(
-            model=self.model_name,
-            messages=conversation
-        )
-        return response.choices[0].message
-
-def get_model(model_name):
-    # Depending on your actual implementation, you might do more here.
-    if model_name in ["gpt4", "gpt-3.5-turbo"]:
-        return OpenAI(model_name)
-
+import base64
+from models import get_model
 
 class Chatbot:
     def __init__(self, model_name, system_prompt=None):
@@ -39,8 +10,28 @@ class Chatbot:
             self.conversation_tracker.append(
                 {"role": "system", "content": "You are a helpful assistant."})
 
-    def chat(self, prompt):
-        self.conversation_tracker.append({"role": "user", "content": prompt})
+    def chat(self, prompt, images=[]):
+        # Function to encode the image
+        def encode_image(image_path):
+            with open(image_path, "rb") as image_file:
+                return base64.b64encode(image_file.read()).decode('utf-8')
+
+        # Prepare the content list with the initial text prompt
+        content = [{"type": "text", "text": prompt}]
+
+        # Iterate over the images
+        for image in images:
+            # Check if the image is a URL or a local path
+            if image.startswith('http://') or image.startswith('https://'):
+                # If it's a URL, add it directly to the content list
+                content.append({"type": "image_url", "image_url": image})
+            else:
+                # If it's a local path, encode the image in base64 and add it to the content list
+                base64_image = encode_image(image)
+                content.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}})
+        
+        self.conversation_tracker.append({"role": "user", "content": content})
+        # Get the response from the model
         response = self.model.get_response(self.conversation_tracker)
         self.conversation_tracker.append({"role": response.role, "content": response.content})
         return response.content
@@ -113,14 +104,23 @@ def get_chatbot(model_name, chatbot_type):
         return CodeChatbot("gpt-3.5-turbo")
     if model_name == "gpt-3.5-turbo" and chatbot_type=="simple_chatbot":
         return Chatbot("gpt-3.5-turbo")
+    if model_name=="gpt-4-1106-preview" and chatbot_type=="simple_chatbot":
+        return Chatbot("gpt-4-1106-preview")
+    if model_name=="gpt-4-1106-preview" and chatbot_type=="write_code_from_file":
+        return CodeChatbot("gpt-4-1106-preview")
+    if model_name=="gpt-4-vision-preview" and chatbot_type=="simple_chatbot":
+        return Chatbot("gpt-4-vision-preview")
 
 
 # Usage:
-bot = get_chatbot("gpt-3.5-turbo", "write_code_from_file")
+bot = get_chatbot("gpt-4-vision-preview", "simple_chatbot")
 #bot = get_chatbot("gpt-3.5-turbo", "simple_chatbot")
 #response = bot.chat("salut mec")
 # 
-response = bot.chat("Please write a javascript program that:", r"C:\Users\simeo\OneDrive - Vrije Universiteit Brussel\Documenten\Developpement\PERSO\Camilia\test.js")
+response = bot.chat("ya quoi sur cette photo ?", 
+                    images=["https://plus.unsplash.com/premium_photo-1676637000058-96549206fe71?q=80&w=2340&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"]
+                    )
+#response = bot.chat("Please write a javascript program that:", r"C:\Users\simeo\OneDrive - Vrije Universiteit Brussel\Documenten\Developpement\PERSO\Camilia\test.js")
 print(response)  # This should display the bot's response
 
 #history = bot.get_conversation_history()
